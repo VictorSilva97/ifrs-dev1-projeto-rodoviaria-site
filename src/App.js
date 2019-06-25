@@ -8,8 +8,10 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <CadastroOnibus />
       </header>
+      <content>
+        <CadastroViagem />
+      </content>
     </div>
   );
 }

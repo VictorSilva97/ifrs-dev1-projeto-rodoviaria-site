@@ -134,6 +134,11 @@ export default class CadastroOnibus extends Component{
                 {(this.state.salvoComSucesso) ? <Alert variant='success'>Salvo com sucesso!</Alert> : null}
                 <Form>
                     <Form.Group>
+                        <Form.Label>ID</Form.Label>
+                        <Form.Control readOnly type="text" value={this.state.id} onChange={event => this.setState({id: event.target.value})}/>
+                    </Form.Group>
+
+                    <Form.Group>
                         <Form.Label>Placa</Form.Label>
                         <Form.Control type="text" value={this.state.placa} onChange={event => this.setState({placa: event.target.value})}/>
                     </Form.Group>

@@ -16,7 +16,7 @@ export default class Login extends Component{
 
     render(){
         return(
-            <Container>
+            <Container className="mx-auto">
                 <h1>Login</h1>
                 <Form>
                     <Form.Group>

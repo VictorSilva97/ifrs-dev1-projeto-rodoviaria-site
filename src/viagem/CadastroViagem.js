@@ -4,6 +4,9 @@ import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
 import axios from 'axios';
 
+const motoristas = ['Motorista 1','Motorista 2','Motorista 3'];
+const onibus = ['Onibus 1','Onibus 2','Onibus 3',];
+
 export default class CadastroViagem extends Component{
 
     constructor(){
@@ -17,13 +20,16 @@ export default class CadastroViagem extends Component{
             data: '',
             horaSaida: '',
             horaChegada: '',
-            motorista: {},
-            onibus: {}
+            motoristas: [],
+            onibus: []
         }
     }
 
     componentDidMount(){
-        
+        this.setState({
+            motoristas: motoristas,
+            onibus: onibus
+        });
     }
 
     cadastrar(){
@@ -67,12 +73,34 @@ export default class CadastroViagem extends Component{
 
                     <Form.Group>
                         <Form.Label>Motorista</Form.Label>
-                        <Form.Control type="text" value={this.state.motorista} onChange={event => this.setState({motorista: event.target.value})}/>
+                        <Form.Control as="select">
+                        <option>Selecione</option>
+                        {
+                            this.state.motoristas.map(
+                                motorista => {
+                                    return(
+                                        <option>{motorista}</option>
+                                    );
+                                }
+                            )
+                        }
+                        </Form.Control>
                     </Form.Group>
 
                     <Form.Group>
                         <Form.Label>Onibus</Form.Label>
-                        <Form.Control type="text" value={this.state.onibus} onChange={event => this.setState({onibus: event.target.value})}/>
+                        <Form.Control as="select">
+                            <option>Selecione</option>
+                            {
+                                this.state.onibus.map(
+                                    bus => {
+                                        return(
+                                            <option>{bus}</option>
+                                        );
+                                    }
+                                )
+                            }
+                        </Form.Control>
                     </Form.Group>
 
                     <Button variant="primary" onClick={this.cadastrar}>Salvar</Button>
