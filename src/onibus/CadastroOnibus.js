@@ -27,7 +27,12 @@ export default class CadastroOnibus extends Component{
             emEdicao: false,
             cadastradoComSucesso: false,
             excluidoComSucesso: false,
-            salvoComSucesso: false
+            salvoComSucesso: false,
+            alert: {
+                isVisible: false,
+                variant: '',
+                message: ''
+            }
         }
     }
 
@@ -39,6 +44,8 @@ export default class CadastroOnibus extends Component{
             this.setState({ onibus: response.data });
         }
         catch (error) {
+            this.setState({alert: {isVisible: true, variant: 'danger', message: 'Erro ao carregar a lista de ônibus!'}});
+            setTimeout(() => this.limparAlert(), 3000)
             console.log(error);
         }
     }
@@ -50,6 +57,31 @@ export default class CadastroOnibus extends Component{
             modelo: '',
             marca: ''
         });
+    }
+
+    limparAlert(){
+        this.setState({
+            alert: {
+                isVisible: false, 
+                variant: '', 
+                message: ''
+            }
+        });
+    }
+    
+    cancelar = () => {
+        this.limparCampos();
+        this.setState({emEdicao: false});
+    }
+    
+    editar(onibus){
+        this.setState({
+            emEdicao: true,
+            id: onibus.id,
+            placa: onibus.placa,
+            modelo: onibus.modelo,
+            marca: onibus.marca
+        })
     }
     
     cadastrar(){
@@ -63,35 +95,28 @@ export default class CadastroOnibus extends Component{
         .then(() => {
             this.carregarTabela();
             this.limparCampos();
-            this.setState({cadastradoComSucesso: true});
-            setTimeout(() => this.setState({cadastradoComSucesso: false}), 3000)
+            this.setState({alert: {isVisible: true, variant: 'success', message: 'Cadastrado com sucesso!'}});
+            setTimeout(() => this.limparAlert(), 3000)
         })        
-        .catch(error => console.log(error)); 
-    }
-
-    editar(onibus){
-        this.setState({
-            emEdicao: true,
-            id: onibus.id,
-            placa: onibus.placa,
-            modelo: onibus.modelo,
-            marca: onibus.marca
-        })
+        .catch(error => {
+            this.setState({alert: {isVisible: true, variant: 'danger', message: `Erro ao cadastrar!${error.message}`}});
+            setTimeout(() => this.limparAlert(), 3000)
+            console.log(error)
+        });
     }
 
     excluir(onibus){
         axios.delete(`http://localhost:8080/api/onibus/${onibus.id}`)
         .then(() => {
             this.carregarTabela();
-            this.setState({excluidoComSucesso: true});
-            setTimeout(() => this.setState({excluidoComSucesso: false}), 3000)
+            this.setState({alert: {isVisible: true, variant: 'success', message: 'Excluído com sucesso!'}});
+            setTimeout(() => this.limparAlert(), 3000)
         })
-        .catch(error => console.log(error));    
-    }
-
-    cancelar = () => {
-        this.limparCampos();
-        this.setState({emEdicao: false});
+        .catch(error => {
+            this.setState({alert: {isVisible: true, variant: 'danger', message: `Erro ao excluir! ${error.message}`}});
+            setTimeout(() => this.limparAlert(), 3000)
+            console.log(error)
+        });
     }
 
     salvar(){
@@ -105,10 +130,13 @@ export default class CadastroOnibus extends Component{
         .then(() => {
             this.carregarTabela();
             this.limparCampos();
-            this.setState({salvoComSucesso: true});
-            setTimeout(() => this.setState({salvoComSucesso: false}), 3000)
+            this.setState({alert: {isVisible: true, variant: 'success', message: 'Salvo com sucesso!'}});
+            setTimeout(() => this.limparAlert(), 3000)
         })
-        .catch(error => console.log(error))
+        .catch(error => {
+            this.setState({alert: {isVisible: true, variant: 'danger', message: `Erro ao excluir! ${error.message}`}});
+            setTimeout(() => this.limparAlert(), 3000)
+        });
     }
 
     render(){
@@ -129,9 +157,7 @@ export default class CadastroOnibus extends Component{
         return(
             <Container>
                 <h1>Cadastro de onibus</h1>
-                {(this.state.cadastradoComSucesso) ? <Alert variant='success'>Cadastrado com sucesso!</Alert> : null}
-                {(this.state.excluidoComSucesso) ? <Alert variant='success'>Excluido com sucesso!</Alert> : null}
-                {(this.state.salvoComSucesso) ? <Alert variant='success'>Salvo com sucesso!</Alert> : null}
+                {(this.state.alert.isVisible) ? <Alert variant={this.state.alert.variant}>{this.state.alert.message}</Alert> : null}
                 <Form>
                     <Form.Group>
                         <Form.Label>ID</Form.Label>

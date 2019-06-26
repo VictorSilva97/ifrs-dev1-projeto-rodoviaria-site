@@ -5,6 +5,7 @@ import Table from 'react-bootstrap/Table';
 import Alert from 'react-bootstrap/Alert';
 import Container from 'react-bootstrap/Container';
 import axios from 'axios';
+import { EventEmitter } from 'events';
 
 export default class CadastroMotorista extends Component{
     
@@ -16,7 +17,9 @@ export default class CadastroMotorista extends Component{
         this.excluir = this.excluir.bind(this);
         this.carregarTabela = this.carregarTabela.bind(this);
         this.limparCampos = this.limparCampos.bind(this);        
+        this.limparAlert = this.limparAlert.bind(this);        
         this.salvar = this.salvar.bind(this);        
+        this.filtrar = this.filtrar.bind(this);        
 
         this.state = {
             id: '',
@@ -24,9 +27,12 @@ export default class CadastroMotorista extends Component{
             cnh: '',
             motoristas: [],
             emEdicao: false,
-            cadastradoComSucesso: false,
-            excluidoComSucesso: false,
-            salvoComSucesso: false
+            alert: {
+                isVisible: false,
+                variant: '',
+                message: ''
+            },
+            filtro: ''
         }
     }
 
@@ -38,6 +44,8 @@ export default class CadastroMotorista extends Component{
             this.setState({ motoristas: response.data });
         }
         catch (error) {
+            this.setState({alert: {isVisible: true, variant: 'danger', message: `Erro ao carregar os motoristas!${error.message}`}});
+            setTimeout(() => this.limparAlert(), 3000)
             console.log(error);
         }
     }
@@ -47,6 +55,16 @@ export default class CadastroMotorista extends Component{
             id: '',
             nome: '',
             cnh: ''
+        });
+    }
+
+    limparAlert(){
+        this.setState({
+            alert: {
+                isVisible: false, 
+                variant: '', 
+                message: ''
+            }
         });
     }
 
@@ -60,10 +78,14 @@ export default class CadastroMotorista extends Component{
         .then(() => {
             this.carregarTabela();
             this.limparCampos();
-            this.setState({cadastradoComSucesso: true});
-            setTimeout(() => this.setState({cadastradoComSucesso: false}), 3000)
+            this.setState({alert: {isVisible: true, variant: 'success', message: 'Cadastrado com sucesso!'}});
+            setTimeout(() => this.limparAlert(), 3000)
         })        
-        .catch(error => console.log(error));        
+        .catch(error => {
+            this.setState({alert: {isVisible: true, variant: 'danger', message: `Erro ao cadastrar!${error.message}`}});
+            setTimeout(() => this.limparAlert(), 3000)
+            console.log(error)
+        });        
     }
 
     editar(motorista){
@@ -82,7 +104,11 @@ export default class CadastroMotorista extends Component{
             this.setState({excluidoComSucesso: true});
             setTimeout(() => this.setState({excluidoComSucesso: false}), 3000)
         })
-        .catch(error => console.log(error));    
+        .catch(error => {
+            this.setState({alert: {isVisible: true, variant: 'danger', message: `Erro ao excluir!${error.message}`}});
+            setTimeout(() => this.limparAlert(), 3000)
+            console.log(error)
+        });        
     }
 
     cancelar = () => {
@@ -103,7 +129,18 @@ export default class CadastroMotorista extends Component{
             this.setState({salvoComSucesso: true});
             setTimeout(() => this.setState({salvoComSucesso: false}), 3000)
         })
-        .catch(error => console.log(error))
+        .catch(error => {
+            this.setState({alert: {isVisible: true, variant: 'danger', message: `Erro ao salvar!${error.message}`}});
+            setTimeout(() => this.limparAlert(), 3000)
+            console.log(error)
+        });        
+    }
+
+    filtrar(){
+        this.setState({motoristas: this.state.motoristas.filter(motorista => {
+                return (motorista.nome == this.state.filtro || motorista.cnh == this.state.filtro)
+            })
+        })
     }
 
     render(){
@@ -124,9 +161,9 @@ export default class CadastroMotorista extends Component{
         return(
             <Container>
                 <h1>Cadastro de Motorista</h1>
-                {(this.state.cadastradoComSucesso) ? <Alert variant='success'>Cadastrado com sucesso!</Alert> : null}
-                {(this.state.excluidoComSucesso) ? <Alert variant='success'>Excluido com sucesso!</Alert> : null}
-                {(this.state.salvoComSucesso) ? <Alert variant='success'>Salvo com sucesso!</Alert> : null}
+                {(this.state.alert.isVisible) ? <Alert variant={this.state.alert.variant}>{this.state.alert.message}</Alert> : null}
+
+
                 <Form>
                     <Form.Group>
                         <Form.Label>ID</Form.Label>
@@ -144,6 +181,13 @@ export default class CadastroMotorista extends Component{
                     </Form.Group>
 
                     {(this.state.emEdicao) ? botoesEmEdicao : botoesCadastro}
+                </Form>
+
+                <Form>
+                    <Form.Group>
+                        <Form.Label>Pesquisa</Form.Label>
+                        <Form.Control placeholder="Nome, CNH..." type="text" value={this.state.filtro} onChange={event => this.setState({filtro: event.target.value}).then(() => this.filtrar())}/>
+                    </Form.Group>
                 </Form>
 
                 <Table striped bordered hover size="sm">
