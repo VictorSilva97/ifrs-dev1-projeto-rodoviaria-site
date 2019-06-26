@@ -82,7 +82,9 @@ export default class CadastroViagem extends Component{
             destino: viagem.destino,
             data: viagem.data,
             horaSaida: viagem.horaSaida,
-            horaChegada: viagem.horaChegada
+            horaChegada: viagem.horaChegada,
+            motorista: viagem.motorista,
+            onibus: viagem.onibus
         })
     }
     
@@ -101,9 +103,11 @@ export default class CadastroViagem extends Component{
             const response = await axios.get(`http://localhost:8080/api/onibus/`);
             this.setState({ lstonibus: response.data });
         }
-        catch (error) {
-            console.log(error);
-        }
+        catch (error){
+            this.setState({alert: {isVisible: true, variant: 'danger', message: `Erro ao carregar as viagens! ${error.message}`}});
+            setTimeout(() => this.limparAlert(), 3000)
+            console.log(error)
+        }; 
     }
 
     async carregarViagens(){
@@ -116,7 +120,9 @@ export default class CadastroViagem extends Component{
         }
     }
 
-    cadastrar(){
+    cadastrar(event){
+        event.preventDefault();
+
         const viagem = {
             origem: this.state.origem,
             destino: this.state.destino,
@@ -192,7 +198,7 @@ export default class CadastroViagem extends Component{
 
         const botoesCadastro = (
             <div>
-                <Button className="mr-2 mb-2" variant="primary" onClick={this.cadastrar}>Cadastrar</Button>
+                <Button className="mr-2 mb-2" variant="primary" type="submit" onClick={this.cadastrar}>Cadastrar</Button>
                 <Button className="mr-2 mb-2" variant="primary" onClick={this.cancelar}>Cancelar</Button>
             </div>
         );
@@ -209,27 +215,27 @@ export default class CadastroViagem extends Component{
 
                     <Form.Group>
                         <Form.Label>Origem</Form.Label>
-                        <Form.Control type="text" value={this.state.origem} onChange={event => this.setState({origem: event.target.value})}/>
+                        <Form.Control required type="text" value={this.state.origem} onChange={event => this.setState({origem: event.target.value})}/>
                     </Form.Group>
 
                     <Form.Group>
                         <Form.Label>Destino</Form.Label>
-                        <Form.Control type="text" value={this.state.destino} onChange={event => this.setState({destino: event.target.value})}/>
+                        <Form.Control type="text" value={this.state.destino} onChange={event => this.setState({destino: event.target.value})} required/>
                     </Form.Group>
 
                     <Form.Group>
                         <Form.Label>Data</Form.Label>
-                        <Form.Control type="text" value={this.state.data} onChange={event => this.setState({data: event.target.value})}/>
+                        <Form.Control placeholder="dd-MM-yyyy" type="text" value={this.state.data} onChange={event => this.setState({data: event.target.value})}/>
                     </Form.Group>
 
                     <Form.Group>
                         <Form.Label>Horário de partida</Form.Label>
-                        <Form.Control type="text" value={this.state.horaSaida} onChange={event => this.setState({horaSaida: event.target.value})}/>
+                        <Form.Control placeholder="hh:mm" type="text" value={this.state.horaSaida} onChange={event => this.setState({horaSaida: event.target.value})}/>
                     </Form.Group>
 
                     <Form.Group>
                         <Form.Label>Horário de chegada</Form.Label>
-                        <Form.Control type="text" value={this.state.horaChegada} onChange={event => this.setState({horaChegada: event.target.value})}/>
+                        <Form.Control placeholder="hh:mm" type="text" value={this.state.horaChegada} onChange={event => this.setState({horaChegada: event.target.value})}/>
                     </Form.Group>
 
                     <Form.Group>
@@ -271,6 +277,10 @@ export default class CadastroViagem extends Component{
                     {(this.state.emEdicao) ? botoesEmEdicao : botoesCadastro}
                 </Form>
 
+                <Form.Group>
+                    <Form.Label>Pesquisa</Form.Label>
+                    <Form.Control placeholder="Origem, destino, data..." type="text" value={this.state.filtro} onChange={event => this.setState({filtro: event.target.value}).then(() => this.filtrar())}/>
+                </Form.Group>
 
                 <Table striped bordered hover size="sm">
                     <thead>

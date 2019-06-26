@@ -44,7 +44,7 @@ export default class CadastroOnibus extends Component{
             this.setState({ onibus: response.data });
         }
         catch (error) {
-            this.setState({alert: {isVisible: true, variant: 'danger', message: 'Erro ao carregar a lista de ônibus!'}});
+            this.setState({alert: {isVisible: true, variant: 'danger', message: `Erro ao carregar os ônibus! ${error.message}`}});
             setTimeout(() => this.limparAlert(), 3000)
             console.log(error);
         }
@@ -180,6 +180,13 @@ export default class CadastroOnibus extends Component{
                     </Form.Group>
 
                     {(this.state.emEdicao) ? botoesEmEdicao : botoesCadastro}
+                </Form>
+
+                <Form>
+                    <Form.Group>
+                        <Form.Label>Pesquisa</Form.Label>
+                        <Form.Control placeholder="Placa, modelo, marca..." type="text" value={this.state.filtro} onChange={event => this.setState({filtro: event.target.value}).then(() => this.filtrar())}/>
+                    </Form.Group>
                 </Form>
 
                 <Table striped bordered hover size="sm">

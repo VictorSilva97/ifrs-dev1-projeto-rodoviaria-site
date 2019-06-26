@@ -44,7 +44,7 @@ export default class CadastroMotorista extends Component{
             this.setState({ motoristas: response.data });
         }
         catch (error) {
-            this.setState({alert: {isVisible: true, variant: 'danger', message: `Erro ao carregar os motoristas!${error.message}`}});
+            this.setState({alert: {isVisible: true, variant: 'danger', message: `Erro ao carregar os motoristas! ${error.message}`}});
             setTimeout(() => this.limparAlert(), 3000)
             console.log(error);
         }
@@ -160,10 +160,8 @@ export default class CadastroMotorista extends Component{
 
         return(
             <Container>
-                <h1>Cadastro de Motorista</h1>
+                <h1>Cadastro de motorista</h1>
                 {(this.state.alert.isVisible) ? <Alert variant={this.state.alert.variant}>{this.state.alert.message}</Alert> : null}
-
-
                 <Form>
                     <Form.Group>
                         <Form.Label>ID</Form.Label>
