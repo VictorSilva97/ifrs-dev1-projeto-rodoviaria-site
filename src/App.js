@@ -29,7 +29,7 @@ class App extends Component{
           </div>
         </div>
 
-        <div id="main">
+        <div className="content">
           {this.props.children}
         </div> 
 
