@@ -83,8 +83,7 @@ export default class CadastroMotorista extends Component{
         })        
         .catch(error => {
             this.setState({alert: {isVisible: true, variant: 'danger', message: `Erro ao cadastrar!${error.message}`}});
-            setTimeout(() => this.limparAlert(), 3000)
-            console.log(error)
+            setTimeout(() => this.limparAlert(), 3000);
         });        
     }
 

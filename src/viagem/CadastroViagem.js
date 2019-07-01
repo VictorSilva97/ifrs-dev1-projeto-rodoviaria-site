@@ -4,7 +4,12 @@ import Button from 'react-bootstrap/Button';
 import Table from 'react-bootstrap/Table';
 import Alert from 'react-bootstrap/Alert';
 import Container from 'react-bootstrap/Container';
+import DayPicker from 'react-day-picker';
+import Col from 'react-bootstrap/Col';
+import Row from 'react-bootstrap/Row';
 import axios from 'axios';
+import './viagem.css';
+import { isUndefined } from 'util';
 
 export default class CadastroViagem extends Component{
 
@@ -16,7 +21,10 @@ export default class CadastroViagem extends Component{
         this.setOnibus = this.setOnibus.bind(this);
         this.editar = this.editar.bind(this);
         this.salvar = this.salvar.bind(this);
-
+        this.filtrar = this.filtrar.bind(this);
+        this.setData = this.setData.bind(this);
+        this.ehViagemValida = this.ehViagemValida.bind(this);
+        
         this.state = {
             id: '',
             origem: '',
@@ -26,11 +34,12 @@ export default class CadastroViagem extends Component{
             horaChegada: '',
             lstmotoristas: [],
             lstonibus: [],
-            motorista: {},
-            onibus: {},
+            motorista: undefined,
+            onibus: undefined,
             usuario: {},
             lstViagens: [],
             emEdicao: false,
+            erros: [],
             alert: {
                 isVisible: false,
                 variant: '',
@@ -120,7 +129,27 @@ export default class CadastroViagem extends Component{
         }
     }
 
-    cadastrar(event){
+    ehViagemValida(viagem){
+        const erros = [];
+        if(!viagem.origem)
+            erros.push('O campo origem é obrigatório');
+        if(!viagem.destino)
+            erros.push('O campo destino é obrigatório');
+        if(!viagem.data)
+            erros.push('O campo data é obrigatório');
+        if(!viagem.horaSaida)
+            erros.push('O campo horário de partida é obrigatório');
+        if(!viagem.horaChegada)
+            erros.push('O campo horário de chegada é obrigatório');
+        if(isUndefined(viagem.motorista))
+            erros.push('O campo motorista é obrigatório');
+        if(isUndefined(viagem.onibus))
+            erros.push('O campo ônibus é obrigatório');
+        
+        return erros;
+    }
+
+    async cadastrar(event){
         event.preventDefault();
 
         const viagem = {
@@ -132,6 +161,13 @@ export default class CadastroViagem extends Component{
             motorista: this.state.motorista,
             onibus: this.state.onibus,
             usuario: {}
+        }
+
+        const erros = await this.ehViagemValida(viagem);
+
+        if(erros.length > 0){
+            this.setState({erros: erros});
+            return;
         }
 
         axios.post(`http://localhost:8080/api/viagens/`, viagem)
@@ -146,6 +182,7 @@ export default class CadastroViagem extends Component{
             setTimeout(() => this.limparAlert(), 3000)
             console.log(error)
         });
+
     }
 
     salvar(){
@@ -188,6 +225,33 @@ export default class CadastroViagem extends Component{
         });    
     }
 
+    async filtrar(pFiltro){
+        await this.setState({filtro: pFiltro});
+        
+        if(this.state.filtro === ''){
+            this.carregarViagens();
+            return;
+        }
+
+        console.log(this.state.filtro);
+        this.setState({lstViagens: this.state.lstViagens.filter(
+            viagem => {
+                return viagem.origem.includes(this.state.filtro)
+                || viagem.destino.includes(this.state.filtro)
+                || viagem.data.includes(this.state.filtro)
+                || viagem.horaSaida.includes(this.state.filtro)
+                || viagem.horaChegada.includes(this.state.filtro)
+                || viagem.motorista.nome.includes(this.state.filtro)
+                || viagem.onibus.placa.includes(this.state.filtro)
+            })
+        });
+    }
+
+    async setData(date){
+        const dataNormal = await date.split('/');
+        this.setState({data: `${dataNormal[1]}/${dataNormal[0]}/${dataNormal[2]}`});
+    }
+
     render(){
         const botoesEmEdicao = (
             <div>
@@ -207,41 +271,43 @@ export default class CadastroViagem extends Component{
             <Container>
                 <h1>Cadastro de viagem</h1>
                 {(this.state.alert.isVisible) ? <Alert variant={this.state.alert.variant}>{this.state.alert.message}</Alert> : null}
+                {this.state.erros.map( erro => <Alert variant='danger'>{erro}</Alert>)}
                 <Form>
-                    <Form.Group>
-                        <Form.Label>ID</Form.Label>
+                    <Form.Group className="d-flex">
+                        <Form.Label className="m-1">ID</Form.Label>
                         <Form.Control readOnly type="text" value={this.state.id} onChange={event => this.setState({id: event.target.value})}/>
                     </Form.Group>
 
-                    <Form.Group>
-                        <Form.Label>Origem</Form.Label>
+                    <Form.Group className="d-flex">
+                        <Form.Label className="m-1">Origem</Form.Label>
                         <Form.Control required type="text" value={this.state.origem} onChange={event => this.setState({origem: event.target.value})}/>
                     </Form.Group>
 
-                    <Form.Group>
-                        <Form.Label>Destino</Form.Label>
+                    <Form.Group className="d-flex">
+                        <Form.Label className="m-1">Destino</Form.Label>
                         <Form.Control type="text" value={this.state.destino} onChange={event => this.setState({destino: event.target.value})} required/>
                     </Form.Group>
 
-                    <Form.Group>
-                        <Form.Label>Data</Form.Label>
-                        <Form.Control placeholder="dd-MM-yyyy" type="text" value={this.state.data} onChange={event => this.setState({data: event.target.value})}/>
-                    </Form.Group>
-
-                    <Form.Group>
-                        <Form.Label>Horário de partida</Form.Label>
-                        <Form.Control placeholder="hh:mm" type="text" value={this.state.horaSaida} onChange={event => this.setState({horaSaida: event.target.value})}/>
-                    </Form.Group>
-
-                    <Form.Group>
-                        <Form.Label>Horário de chegada</Form.Label>
-                        <Form.Control placeholder="hh:mm" type="text" value={this.state.horaChegada} onChange={event => this.setState({horaChegada: event.target.value})}/>
-                    </Form.Group>
-
-                    <Form.Group>
-                        <Form.Label>Motorista</Form.Label>
+                    <div className="d-inline-flex p-0">
+                        <div className="p-0 m-0">
+                            <DayPicker onDayClick={date => this.setData(date.toLocaleDateString())}/>
+                        </div>
+                        
+                        <div className="p-0 m-3">
+                            <Form.Label>Data</Form.Label>
+                            <Form.Control readOnly type="text" value={this.state.data}/>
+                            
+                            <Form.Label>Horário de partida</Form.Label>
+                            <Form.Control type="time" value={this.state.horaSaida} onChange={event => this.setState({horaSaida: event.target.value})}/>
+                        
+                            <Form.Label>Horário de chegada</Form.Label>
+                            <Form.Control type="time" value={this.state.horaChegada} onChange={event => this.setState({horaChegada: event.target.value})}/>
+                        </div>
+                    </div>
+                    <Form.Group className="d-flex">
+                        <Form.Label className="m-1">Motorista</Form.Label>
                         <Form.Control as="select" onChange={this.setMotorista}>
-                            <option>Selecione</option>
+                            <option value={undefined}>Selecione</option>
                             {
                                 this.state.lstmotoristas.map(
                                     motorista => {
@@ -256,10 +322,10 @@ export default class CadastroViagem extends Component{
                         </Form.Control>
                     </Form.Group>
 
-                    <Form.Group>
-                        <Form.Label>Onibus</Form.Label>
+                    <Form.Group className="d-flex">
+                        <Form.Label className="m-1">Onibus</Form.Label>
                         <Form.Control as="select" onChange={this.setOnibus}>
-                            <option>Selecione</option>
+                            <option value={undefined}>Selecione</option>
                             {
                                 this.state.lstonibus.map(
                                     bus => {
@@ -277,9 +343,9 @@ export default class CadastroViagem extends Component{
                     {(this.state.emEdicao) ? botoesEmEdicao : botoesCadastro}
                 </Form>
 
-                <Form.Group>
-                    <Form.Label>Pesquisa</Form.Label>
-                    <Form.Control placeholder="Origem, destino, data..." type="text" value={this.state.filtro} onChange={event => this.setState({filtro: event.target.value}).then(() => this.filtrar())}/>
+                <Form.Group className="d-flex">
+                    <Form.Label className="m-1">Pesquisa</Form.Label>
+                    <Form.Control placeholder="Origem, destino, data..." type="text" value={this.state.filtro} onChange={event => this.filtrar(event.target.value)}/>
                 </Form.Group>
 
                 <Table striped bordered hover size="sm">
@@ -291,6 +357,8 @@ export default class CadastroViagem extends Component{
                             <th>Data</th>
                             <th>Hr partida</th>
                             <th>Hr chegada</th>
+                            <th>Motorista</th>
+                            <th>Ônibus</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -306,9 +374,11 @@ export default class CadastroViagem extends Component{
                                             <td>{viagem.data}</td>
                                             <td>{viagem.horaSaida}</td>
                                             <td>{viagem.horaChegada}</td>
+                                            <td>{viagem.motorista.nome}</td>
+                                            <td>{`${viagem.onibus.placa} - ${viagem.onibus.marca}/${viagem.onibus.modelo}`}</td>
                                             <td>
-                                                <Button className="mr-2" variant="primary" onClick={() => this.editar(viagem)}>Editar</Button>
-                                                <Button variant="primary" onClick={() => this.excluir(viagem)}>Excluir</Button>
+                                                <Button className="m-1 col-12" variant="primary" onClick={() => this.editar(viagem)}>Editar</Button>
+                                                <Button className="m-1 col-12" variant="primary" onClick={() => this.excluir(viagem)}>Excluir</Button>
                                             </td>  
                                         </tr>
                                     );
