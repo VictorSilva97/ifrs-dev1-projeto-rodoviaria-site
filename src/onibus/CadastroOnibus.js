@@ -17,6 +17,7 @@ export default class CadastroOnibus extends Component{
         this.carregarTabela = this.carregarTabela.bind(this);
         this.limparCampos = this.limparCampos.bind(this);        
         this.salvar = this.salvar.bind(this);        
+        this.filtrar = this.filtrar.bind(this);        
 
         this.state = {         
             id: '',
@@ -33,7 +34,8 @@ export default class CadastroOnibus extends Component{
                 variant: '',
                 message: ''
             },
-            erros: []
+            erros: [],
+            filtro: ''
         }
     }
 
@@ -95,6 +97,8 @@ export default class CadastroOnibus extends Component{
             erros.push('O campo modelo é obrigatório');
         if(!onibus.marca)
             erros.push('O campo marca é obrigatório');
+        if(onibus.placa.length != 6)
+            erros.push('A placa deve ter 6 caracteres');
             
         return erros;
     }
@@ -168,6 +172,23 @@ export default class CadastroOnibus extends Component{
         });
     }
 
+    async filtrar(pFiltro){
+        await this.setState({filtro: pFiltro});
+        
+        if(this.state.filtro === ''){
+            this.carregarTabela();
+            return;
+        }
+
+        this.setState({onibus: this.state.onibus.filter(
+            bus => {
+                return bus.placa.includes(this.state.filtro)
+                || bus.modelo.includes(this.state.filtro)
+                || bus.marca.includes(this.state.filtro)
+            })
+        });
+    }
+
     render(){
         const botoesEmEdicao = (
             <div>
@@ -215,7 +236,7 @@ export default class CadastroOnibus extends Component{
                 <Form>
                     <Form.Group>
                         <Form.Label>Pesquisa</Form.Label>
-                        <Form.Control placeholder="Placa, modelo, marca..." type="text" value={this.state.filtro} onChange={event => this.setState({filtro: event.target.value}).then(() => this.filtrar())}/>
+                        <Form.Control placeholder="Placa, modelo, marca..." type="text" value={this.state.filtro} onChange={event => this.filtrar(event.target.value)}/>
                     </Form.Group>
                 </Form>
 

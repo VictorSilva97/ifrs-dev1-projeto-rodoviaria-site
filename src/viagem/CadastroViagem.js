@@ -188,9 +188,7 @@ export default class CadastroViagem extends Component{
             erros.push('O campo horário de partida é obrigatório');
         if(!viagem.horaChegada)
             erros.push('O campo horário de chegada é obrigatório');
-
-        const mot = this.state.lstmotoristas.filter( motor => motor.isSelected === true)[0];
-        if(mot.id === 0)
+        if(isUndefined(viagem.motorista))
             erros.push('O campo motorista é obrigatório');
         if(isUndefined(viagem.onibus))
             erros.push('O campo ônibus é obrigatório');
@@ -274,7 +272,7 @@ export default class CadastroViagem extends Component{
             setTimeout(() => this.limparAlert(), 3000)
         })
         .catch(error => {
-            this.setState({alert: {isVisible: true, variant: 'danger', message: `Erro ao cadastrar!${error.message}`}});
+            this.setState({alert: {isVisible: true, variant: 'danger', message: `Erro ao excluir!${error.message}`}});
             setTimeout(() => this.limparAlert(), 3000)
             console.log(error)
         });    
@@ -367,7 +365,7 @@ export default class CadastroViagem extends Component{
                                     motorista => {
                                         return(
                                             <option key={motorista.id} value={motorista.id} selected={motorista.isSelected}>
-                                                {`${motorista.id} - ${motorista.nome}`}
+                                                {motorista.nome}
                                             </option>
                                         );
                                     }
@@ -384,7 +382,7 @@ export default class CadastroViagem extends Component{
                                     bus => {
                                         return(
                                             <option key={bus.id} value={bus.id} selected={bus.isSelected}>
-                                                {`${bus.placa} - ${bus.modelo}`}
+                                                {bus.modelo}
                                             </option>
                                         );
                                     }

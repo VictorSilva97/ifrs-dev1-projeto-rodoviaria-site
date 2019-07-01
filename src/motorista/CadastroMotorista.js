@@ -77,6 +77,8 @@ export default class CadastroMotorista extends Component{
             erros.push('O campo nome é obrigatório');
         if(!motorista.cnh)
             erros.push('O campo cnh é obrigatório');
+        if(motorista.cnh.length != 11)
+            erros.push('A cnh deve ter 11 caracteres');
 
         return erros;
     }
@@ -162,11 +164,20 @@ export default class CadastroMotorista extends Component{
         });        
     }
 
-    filtrar(){
-        this.setState({motoristas: this.state.motoristas.filter(motorista => {
-                return (motorista.nome == this.state.filtro || motorista.cnh == this.state.filtro)
+    async filtrar(pFiltro){
+        await this.setState({filtro: pFiltro});
+        
+        if(this.state.filtro === ''){
+            this.carregarTabela();
+            return;
+        }
+
+        this.setState({motoristas: this.state.motoristas.filter(
+            motorista => {
+                return motorista.nome.includes(this.state.filtro)
+                || motorista.cnh.includes(this.state.filtro)
             })
-        })
+        });
     }
 
     render(){
@@ -211,7 +222,7 @@ export default class CadastroMotorista extends Component{
                 <Form>
                     <Form.Group>
                         <Form.Label>Pesquisa</Form.Label>
-                        <Form.Control placeholder="Nome, CNH..." type="text" value={this.state.filtro} onChange={event => this.setState({filtro: event.target.value}).then(() => this.filtrar())}/>
+                        <Form.Control placeholder="Nome, CNH..." type="text" value={this.state.filtro} onChange={event => this.filtrar(event.target.value)}/>
                     </Form.Group>
                 </Form>
 
