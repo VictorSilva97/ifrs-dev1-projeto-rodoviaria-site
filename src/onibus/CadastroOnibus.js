@@ -32,7 +32,8 @@ export default class CadastroOnibus extends Component{
                 isVisible: false,
                 variant: '',
                 message: ''
-            }
+            },
+            erros: []
         }
     }
 
@@ -55,7 +56,8 @@ export default class CadastroOnibus extends Component{
             id: '',
             placa: '',
             modelo: '',
-            marca: ''
+            marca: '',
+            erros: []
         });
     }
 
@@ -84,11 +86,32 @@ export default class CadastroOnibus extends Component{
         })
     }
     
-    cadastrar(){
+    ehOnibusValido(onibus){
+        const erros = [];
+
+        if(!onibus.placa)
+            erros.push('O campo placa é obrigatório');
+        if(!onibus.modelo)
+            erros.push('O campo modelo é obrigatório');
+        if(!onibus.marca)
+            erros.push('O campo marca é obrigatório');
+            
+        return erros;
+    }
+
+
+    async cadastrar(){
         const onibus = {
             placa: this.state.placa,
             modelo: this.state.modelo,
             marca: this.state.marca
+        }
+
+        const erros = await this.ehOnibusValido(onibus);
+
+        if(erros.length > 0){
+            this.setState({erros: erros});
+            return;
         }
 
         axios.post(`http://localhost:8080/api/onibus/`, onibus)
@@ -119,11 +142,17 @@ export default class CadastroOnibus extends Component{
         });
     }
 
-    salvar(){
+    async salvar(){
         const onibus = {
             placa: this.state.placa,
             modelo: this.state.modelo,
             marca: this.state.marca
+        }
+
+        const erros = await this.ehOnibusValido(onibus);
+        if(erros.length > 0){
+            this.setState({erros: erros});
+            return;
         }
 
         axios.put(`http://localhost:8080/api/onibus/${this.state.id}`, onibus)
@@ -158,6 +187,7 @@ export default class CadastroOnibus extends Component{
             <Container>
                 <h1>Cadastro de onibus</h1>
                 {(this.state.alert.isVisible) ? <Alert variant={this.state.alert.variant}>{this.state.alert.message}</Alert> : null}
+                {this.state.erros.map( erro => <Alert variant='danger'>{erro}</Alert>)}
                 <Form>
                     <Form.Group>
                         <Form.Label>ID</Form.Label>

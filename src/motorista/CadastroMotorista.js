@@ -32,7 +32,8 @@ export default class CadastroMotorista extends Component{
                 variant: '',
                 message: ''
             },
-            filtro: ''
+            filtro: '',
+            erros: []
         }
     }
 
@@ -54,7 +55,8 @@ export default class CadastroMotorista extends Component{
         this.setState({
             id: '',
             nome: '',
-            cnh: ''
+            cnh: '',
+            erros: []
         });
     }
 
@@ -68,10 +70,28 @@ export default class CadastroMotorista extends Component{
         });
     }
 
-    cadastrar(){
+    ehMotoristaValido(motorista){
+        const erros = [];
+
+        if(!motorista.nome)
+            erros.push('O campo nome é obrigatório');
+        if(!motorista.cnh)
+            erros.push('O campo cnh é obrigatório');
+
+        return erros;
+    }
+
+    async cadastrar(){
         const motorista = {
             nome: this.state.nome,
             cnh: this.state.cnh
+        }
+
+        const erros = await this.ehMotoristaValido(motorista);
+
+        if(erros.length > 0){
+            this.setState({erros: erros});
+            return;
         }
 
         axios.post(`http://localhost:8080/api/motoristas/`, motorista)
@@ -115,10 +135,17 @@ export default class CadastroMotorista extends Component{
         this.setState({emEdicao: false});
     }
 
-    salvar(){
+    async salvar(){
         const motorista = {
             nome: this.state.nome,
             cnh: this.state.cnh
+        }
+
+        const erros = await this.ehMotoristaValido(motorista);
+
+        if(erros.length > 0){
+            this.setState({erros: erros});
+            return;
         }
 
         axios.put(`http://localhost:8080/api/motoristas/${this.state.id}`, motorista)
@@ -161,6 +188,7 @@ export default class CadastroMotorista extends Component{
             <Container>
                 <h1>Cadastro de motorista</h1>
                 {(this.state.alert.isVisible) ? <Alert variant={this.state.alert.variant}>{this.state.alert.message}</Alert> : null}
+                {this.state.erros.map( erro => <Alert variant='danger'>{erro}</Alert>)}
                 <Form>
                     <Form.Group>
                         <Form.Label>ID</Form.Label>

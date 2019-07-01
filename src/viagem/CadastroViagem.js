@@ -5,8 +5,6 @@ import Table from 'react-bootstrap/Table';
 import Alert from 'react-bootstrap/Alert';
 import Container from 'react-bootstrap/Container';
 import DayPicker from 'react-day-picker';
-import Col from 'react-bootstrap/Col';
-import Row from 'react-bootstrap/Row';
 import axios from 'axios';
 import './viagem.css';
 import { isUndefined } from 'util';
@@ -73,17 +71,60 @@ export default class CadastroViagem extends Component{
     }
     
     limparCampos(){
+        const motoristas = this.state.lstmotoristas.map(
+            motorista => {
+                if(motorista.id === 0)
+                    motorista.isSelected = true; 
+                else
+                    motorista.isSelected = false; 
+
+                return motorista;
+            }
+        )
+
+        const onibus = this.state.lstonibus.map(
+            bus => {
+                if(bus.id === 0)
+                    bus.isSelected = true;                
+                else
+                    bus.isSelected = false;
+
+                return bus;
+            }
+        )
+        
         this.setState({
             id: '',
             origem: '',
             destino: '',
             data: '',
             horaSaida: '',
-            horaChegada: ''
+            horaChegada: '',
+            lstmotoristas: motoristas,
+            lstonibus: onibus,
+            erros: [],
+            motorista: undefined,
+            onibus: undefined
         });
     }
     
-    editar(viagem){
+    async editar(viagem){
+        const motoristas = this.state.lstmotoristas.map(
+            motorista => {
+                if(motorista.id === viagem.motorista.id)
+                    motorista.isSelected = true;                
+                return motorista;
+            }
+        )
+
+        const onibus = this.state.lstonibus.map(
+            bus => {
+                if(bus.id === viagem.onibus.id)
+                    bus.isSelected = true;                
+                return bus;
+            }
+        )
+
         this.setState({
             emEdicao: true,
             id: viagem.id,
@@ -93,14 +134,18 @@ export default class CadastroViagem extends Component{
             horaSaida: viagem.horaSaida,
             horaChegada: viagem.horaChegada,
             motorista: viagem.motorista,
-            onibus: viagem.onibus
+            onibus: viagem.onibus,
+            lstmotoristas: motoristas,
+            lstonibus: onibus
         })
     }
     
     async carregarMotoristas(){
         try {
             const response = await axios.get(`http://localhost:8080/api/motoristas/`);
-            this.setState({ lstmotoristas: response.data });
+            const motoristas = response.data;
+            motoristas.unshift({id:'0',nome: 'Selecione'});
+            this.setState({ lstmotoristas: motoristas});
         }
         catch (error) {
             console.log(error);
@@ -110,7 +155,9 @@ export default class CadastroViagem extends Component{
     async carregarOnibus(){
         try {
             const response = await axios.get(`http://localhost:8080/api/onibus/`);
-            this.setState({ lstonibus: response.data });
+            const onibus = response.data;
+            onibus.unshift({id:'0', placa: '', modelo: 'Selecione'});
+            this.setState({ lstonibus:  onibus});
         }
         catch (error){
             this.setState({alert: {isVisible: true, variant: 'danger', message: `Erro ao carregar as viagens! ${error.message}`}});
@@ -141,7 +188,9 @@ export default class CadastroViagem extends Component{
             erros.push('O campo horário de partida é obrigatório');
         if(!viagem.horaChegada)
             erros.push('O campo horário de chegada é obrigatório');
-        if(isUndefined(viagem.motorista))
+
+        const mot = this.state.lstmotoristas.filter( motor => motor.isSelected === true)[0];
+        if(mot.id === 0)
             erros.push('O campo motorista é obrigatório');
         if(isUndefined(viagem.onibus))
             erros.push('O campo ônibus é obrigatório');
@@ -185,7 +234,7 @@ export default class CadastroViagem extends Component{
 
     }
 
-    salvar(){
+    async salvar(){
         const viagem = {
             origem: this.state.origem,
             destino: this.state.destino,
@@ -195,6 +244,12 @@ export default class CadastroViagem extends Component{
             motorista: this.state.motorista,
             onibus: this.state.onibus,
             usuario: {}
+        }
+
+        const erros = await this.ehViagemValida(viagem);
+        if(erros.length > 0){
+            this.setState({erros: erros});
+            return;
         }
 
         axios.put(`http://localhost:8080/api/viagens/${this.state.id}`, viagem)
@@ -251,7 +306,7 @@ export default class CadastroViagem extends Component{
         const dataNormal = await date.split('/');
         this.setState({data: `${dataNormal[1]}/${dataNormal[0]}/${dataNormal[2]}`});
     }
-
+    
     render(){
         const botoesEmEdicao = (
             <div>
@@ -307,12 +362,11 @@ export default class CadastroViagem extends Component{
                     <Form.Group className="d-flex">
                         <Form.Label className="m-1">Motorista</Form.Label>
                         <Form.Control as="select" onChange={this.setMotorista}>
-                            <option value={undefined}>Selecione</option>
                             {
                                 this.state.lstmotoristas.map(
                                     motorista => {
                                         return(
-                                            <option key={motorista.id} value={motorista.id}>
+                                            <option key={motorista.id} value={motorista.id} selected={motorista.isSelected}>
                                                 {`${motorista.id} - ${motorista.nome}`}
                                             </option>
                                         );
@@ -325,12 +379,11 @@ export default class CadastroViagem extends Component{
                     <Form.Group className="d-flex">
                         <Form.Label className="m-1">Onibus</Form.Label>
                         <Form.Control as="select" onChange={this.setOnibus}>
-                            <option value={undefined}>Selecione</option>
                             {
                                 this.state.lstonibus.map(
                                     bus => {
                                         return(
-                                            <option key={bus.id} value={bus.id}>
+                                            <option key={bus.id} value={bus.id} selected={bus.isSelected}>
                                                 {`${bus.placa} - ${bus.modelo}`}
                                             </option>
                                         );
@@ -375,7 +428,7 @@ export default class CadastroViagem extends Component{
                                             <td>{viagem.horaSaida}</td>
                                             <td>{viagem.horaChegada}</td>
                                             <td>{viagem.motorista.nome}</td>
-                                            <td>{`${viagem.onibus.placa} - ${viagem.onibus.marca}/${viagem.onibus.modelo}`}</td>
+                                            <td>{`${viagem.onibus.placa} - ${viagem.onibus.modelo}`}</td>
                                             <td>
                                                 <Button className="m-1 col-12" variant="primary" onClick={() => this.editar(viagem)}>Editar</Button>
                                                 <Button className="m-1 col-12" variant="primary" onClick={() => this.excluir(viagem)}>Excluir</Button>
